@@ -1,0 +1,11 @@
+## Interface: 20505
+## Title: CraftProfit
+## Notes: Addon de calcul de rentabilite craft vs achat HV
+## Author: Max
+## Version: 0.1
+## SavedVariables: CraftProfitDB
+## OptionalDeps: Auctionator
+
+CraftProfit_Debug.lua
+CraftProfit.lua
+
