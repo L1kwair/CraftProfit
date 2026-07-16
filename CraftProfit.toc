@@ -11,6 +11,7 @@ CraftProfit_Bags.lua
 CraftProfit_Bank.lua
 CraftProfit_Recipes.lua
 CraftProfit_Prices.lua
+CraftProfit_Format.lua
 CraftProfit_Profit.lua
 CraftProfit_Core.lua
 
