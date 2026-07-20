@@ -15,14 +15,8 @@ function CraftProfit.ScanBank()
                 local link = info.itemLink or info.hyperlink
 
                 if itemID then
-                    if CraftProfitDB.bank[itemID] then
-                        CraftProfitDB.bank[itemID].count = CraftProfitDB.bank[itemID].count + count
-                    else
-                        CraftProfitDB.bank[itemID] = {
-                            name = link or "???",
-                            count = count
-                        }
-                    end
+                    CraftProfitDB.bank[itemID] = (CraftProfitDB.bank[itemID] or 0) + count
+                    CraftProfit.RegisterItem(itemID, link, info.iconFileID)
 
                     if not link then
                         incomplete = true

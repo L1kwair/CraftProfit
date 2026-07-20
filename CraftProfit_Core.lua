@@ -1,7 +1,7 @@
 local frame = CreateFrame("frame")
 
 frame:RegisterEvent("PLAYER_LOGIN")
-frame:RegisterEvent("TRADE_SKILL_SHOW")
+frame:RegisterEvent("TRADE_SKILL_UPDATE")
 frame:RegisterEvent("TRADE_SKILL_CLOSE")
 frame:RegisterEvent("BANKFRAME_OPENED")
 frame:RegisterEvent("BANKFRAME_CLOSED")
@@ -15,10 +15,20 @@ frame:SetScript("OnEvent", function(self, event, ...)
             CraftProfitDB = {
                 loginCount = 0,
                 items = {},
-                recipes = {}
+                recipes = {},
+                itemToRecipe = {},
+                professions = {},
+                inventory = {},
+                bank = {},
             }
             CraftProfit.Debug("Premiere utilisation, base creee")
         else
+            CraftProfitDB.items = CraftProfitDB.items or {}
+            CraftProfitDB.recipes = CraftProfitDB.recipes or {}
+            CraftProfitDB.itemToRecipe = CraftProfitDB.itemToRecipe or {}
+            CraftProfitDB.professions = CraftProfitDB.professions or {}
+            CraftProfitDB.inventory = CraftProfitDB.inventory or {}
+            CraftProfitDB.bank = CraftProfitDB.bank or {}
             CraftProfit.Debug("Base existante chargee")
         end
 
@@ -36,7 +46,7 @@ frame:SetScript("OnEvent", function(self, event, ...)
         end
     end
 
-    if event == "TRADE_SKILL_SHOW" then
+    if event == "TRADE_SKILL_UPDATE" then
         CraftProfit.ScanRecipes()
     end
 

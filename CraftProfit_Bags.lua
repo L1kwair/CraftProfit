@@ -2,7 +2,7 @@ local GetNumSlots = C_Container and C_Container.GetContainerNumSlots or GetConta
 local GetItemInfo = C_Container and C_Container.GetContainerItemInfo or GetContainerItemInfo
 
 function CraftProfit.ScanBags()
-    CraftProfitDB.items = {}
+    CraftProfitDB.inventory = {}
 
     for bagID = 0, 4 do
         local numSlots = GetNumSlots(bagID)
@@ -13,18 +13,12 @@ function CraftProfit.ScanBags()
                 local count = info.stackCount or 1
                 local link = info.itemLink or info.hyperlink
 
-                if CraftProfitDB.items[itemID] then
-                    CraftProfitDB.items[itemID].count = CraftProfitDB.items[itemID].count + count
-                else
-                    CraftProfitDB.items[itemID] = {
-                        name = link,
-                        count = count
-                    }
-                end
+                CraftProfitDB.inventory[itemID] = (CraftProfitDB.inventory[itemID] or 0) + count
+                CraftProfit.RegisterItem(itemID, link, info.iconFileID)
             end
         end
     end
 
-    CraftProfit.Debug("Items sauvegardes : ")
-    CraftProfit.Debug(CraftProfitDB.items)
+    CraftProfit.Debug("Inventaire scanne")
+    CraftProfit.Debug(CraftProfitDB.inventory)
 end

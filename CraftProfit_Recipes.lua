@@ -2,11 +2,7 @@ function CraftProfit.ScanRecipes()
     local professionName = GetTradeSkillLine()
     local numSkills = GetNumTradeSkills()
 
-    if not CraftProfitDB.recipes then
-        CraftProfitDB.recipes = {}
-    end
-
-    CraftProfitDB.recipes[professionName] = {}
+    CraftProfitDB.professions[professionName] = {}
     local count = 0
     local incomplete = false
 
@@ -16,11 +12,14 @@ function CraftProfit.ScanRecipes()
         if skillType ~= "header" then
             local itemLink = GetTradeSkillItemLink(i)
             local itemID = itemLink and tonumber(itemLink:match("item:(%d+)"))
+            local recipeLink = GetTradeSkillRecipeLink(i)
+            local spellID = recipeLink and tonumber(recipeLink:match("enchant:(%d+)"))
+            local itemIcon = GetTradeSkillIcon(i)
             local minMade, maxMade = GetTradeSkillNumMade(i)
             local numReagents = GetTradeSkillNumReagents(i)
             local reagents = {}
 
-            if not itemID then
+            if not itemID or not spellID then
                 incomplete = true
             end
 
@@ -29,30 +28,35 @@ function CraftProfit.ScanRecipes()
                 local reagentLink = GetTradeSkillReagentItemLink(i, j)
                 local reagentID = reagentLink and tonumber(reagentLink:match("item:(%d+)"))
 
-                if reagentName then
+                if reagentName and reagentID then
                     reagents[j] = {
-                        name = reagentName,
-                        icon = reagentTexture,
+                        itemID = reagentID,
                         count = reagentCount,
-                        itemID = reagentID
                     }
-                    if not reagentID then
-                        incomplete = true
-                    end
+                    CraftProfit.RegisterItem(reagentID, reagentLink, reagentTexture)
                 else
                     incomplete = true
                 end
             end
 
-            count = count + 1
-            CraftProfitDB.recipes[professionName][count] = {
-                name = name,
-                itemLink = itemLink,
-                itemID = itemID,
-                minMade = minMade,
-                maxMade = maxMade,
-                reagents = reagents
-            }
+            if spellID then
+                CraftProfitDB.recipes[spellID] = {
+                    itemID = itemID,
+                    profession = professionName,
+                    minMade = minMade,
+                    maxMade = maxMade,
+                    reagents = reagents,
+                }
+
+                if itemID then
+                    CraftProfitDB.itemToRecipe[itemID] = CraftProfitDB.itemToRecipe[itemID] or {}
+                    table.insert(CraftProfitDB.itemToRecipe[itemID], spellID)
+                    CraftProfit.RegisterItem(itemID, itemLink, itemIcon)
+                end
+
+                count = count + 1
+                table.insert(CraftProfitDB.professions[professionName], spellID)
+            end
         end
     end
 

@@ -4,8 +4,9 @@
 ## Author: Max
 ## Version: 0.1
 ## SavedVariables: CraftProfitDB
-## OptionalDeps: Auctionator
+## Dependencies: Auctionator
 
+CraftProfit_DB.lua
 CraftProfit_Debug.lua
 CraftProfit_Bags.lua
 CraftProfit_Bank.lua
@@ -13,5 +14,6 @@ CraftProfit_Recipes.lua
 CraftProfit_Prices.lua
 CraftProfit_Format.lua
 CraftProfit_Profit.lua
+CraftProfit_Tooltip.lua
 CraftProfit_Core.lua
 
