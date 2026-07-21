@@ -35,6 +35,16 @@ function CraftProfit.CalculateProfit(recipe)
     }
 end
 
+function CraftProfit.CalculateCraftable(recipe)
+    local minCraftable = math.huge
+    for _, reagent in ipairs(recipe.reagents) do
+        local owned = CraftProfitDB.inventory[reagent.itemID] or 0
+        local possible = math.floor(owned / reagent.count)
+        minCraftable = math.min(minCraftable, possible)
+    end
+    return minCraftable
+end
+
 function CraftProfit.ScanProfits(professionName)
     local spellIDs = CraftProfitDB.professions[professionName]
     if not spellIDs then
