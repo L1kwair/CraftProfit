@@ -295,6 +295,13 @@ function CraftProfit.CreateMainWindow()
         UpdateItemGrid()
     end)
 
+    CraftProfit.RefreshUI = function()
+        if f:IsShown() then
+            UpdateItemGrid()
+            UpdateRecipeList()
+        end
+    end
+
     f:Hide()
     return f
 end

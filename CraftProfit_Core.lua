@@ -3,6 +3,7 @@ local frame = CreateFrame("frame")
 frame:RegisterEvent("PLAYER_LOGIN")
 frame:RegisterEvent("TRADE_SKILL_UPDATE")
 frame:RegisterEvent("TRADE_SKILL_CLOSE")
+frame:RegisterEvent("BAG_UPDATE")
 frame:RegisterEvent("BANKFRAME_OPENED")
 frame:RegisterEvent("BANKFRAME_CLOSED")
 frame:RegisterEvent("GET_ITEM_INFO_RECEIVED")
@@ -64,6 +65,13 @@ frame:SetScript("OnEvent", function(self, event, ...)
         end
         if CraftProfit.needsRescanBank then
             CraftProfit.ScanBank()
+        end
+    end
+
+    if event == "BAG_UPDATE" then
+        CraftProfit.ScanBags()
+        if CraftProfit.RefreshUI then
+            CraftProfit.RefreshUI()
         end
     end
 
