@@ -16,7 +16,7 @@ function CraftProfit.ScanBank()
 
                 if itemID then
                     CraftProfitDB.bank[itemID] = (CraftProfitDB.bank[itemID] or 0) + count
-                    CraftProfit.RegisterItem(itemID, link, info.iconFileID)
+                    CraftProfit.RegisterItem(itemID)
 
                     if not link then
                         incomplete = true

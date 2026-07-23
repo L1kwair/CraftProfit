@@ -14,7 +14,7 @@ function CraftProfit.ScanBags()
                 local link = info.itemLink or info.hyperlink
 
                 CraftProfitDB.inventory[itemID] = (CraftProfitDB.inventory[itemID] or 0) + count
-                CraftProfit.RegisterItem(itemID, link, info.iconFileID)
+                CraftProfit.RegisterItem(itemID)
             end
         end
     end

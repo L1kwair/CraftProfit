@@ -33,7 +33,7 @@ function CraftProfit.ScanRecipes()
                         itemID = reagentID,
                         count = reagentCount,
                     }
-                    CraftProfit.RegisterItem(reagentID, reagentLink, reagentTexture)
+                    CraftProfit.RegisterItem(reagentID)
                 else
                     incomplete = true
                 end
@@ -51,7 +51,7 @@ function CraftProfit.ScanRecipes()
                 if itemID then
                     CraftProfitDB.itemToRecipe[itemID] = CraftProfitDB.itemToRecipe[itemID] or {}
                     table.insert(CraftProfitDB.itemToRecipe[itemID], spellID)
-                    CraftProfit.RegisterItem(itemID, itemLink, itemIcon)
+                    CraftProfit.RegisterItem(itemID)
                 end
 
                 count = count + 1
