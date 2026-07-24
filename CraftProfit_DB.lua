@@ -1,5 +1,16 @@
 CraftProfit = CraftProfit or {}
 
+local function GetItemCategory(itemID)
+    local _, _, _, _, _, itemType, _, _, _, _, _, classID = GetItemInfo(itemID)
+    if not itemType then return "Autre" end
+
+    if classID == 2 or classID == 4 then
+        return "Equipement"
+    end
+
+    return itemType
+end
+
 function CraftProfit.RegisterItem(itemID)
     if not itemID then return end
     if CraftProfitDB.items[itemID] then return end
@@ -11,6 +22,7 @@ function CraftProfit.RegisterItem(itemID)
         name = name,
         itemLink = itemLink,
         icon = icon,
+        category = GetItemCategory(itemID),
     }
 end
 

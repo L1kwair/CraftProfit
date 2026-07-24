@@ -42,6 +42,10 @@ function CraftProfit.CreateMainWindow()
     title:SetPoint("TOP", f, "TOP", 0, -10)
     title:SetText("CraftProfit")
 
+    local currentRecipes = {}
+    local UpdateRecipeList
+    local selectedItemID = nil
+
     -- Panneau gauche
     local leftPanel = CreateFrame("Frame", nil, f, "BackdropTemplate")
     leftPanel:SetPoint("TOPLEFT", f, "TOPLEFT", 10, -35)
@@ -56,88 +60,186 @@ function CraftProfit.CreateMainWindow()
 
     local ICON_SIZE = 37
     local ICON_SPACING = 2
-    local ICONS_PER_ROW = 8
+    local ICONS_PER_ROW = 7
     local VISIBLE_ROWS = 11
+    local ROW_HEIGHT_LEFT = ICON_SIZE + ICON_SPACING
 
     local scrollFrame = CreateFrame("ScrollFrame", nil, leftPanel, "FauxScrollFrameTemplate")
     scrollFrame:SetPoint("TOPLEFT", leftPanel, "TOPLEFT", 0, -8)
     scrollFrame:SetPoint("BOTTOMRIGHT", leftPanel, "BOTTOMRIGHT", -30, 8)
 
-    local buttons = {}
-    local totalSlots = ICONS_PER_ROW * VISIBLE_ROWS
-    local selectedButton = nil
+    local collapsedCategories = {}
+    local displayRows = {}
+    local UpdateItemGrid
 
-    for i = 1, totalSlots do
-        local btn = CraftProfit.CreateItemButton(leftPanel, ICON_SIZE)
+    local slots = {}
+    for i = 1, VISIBLE_ROWS do
+        local anchor = CreateFrame("Frame", nil, leftPanel)
+        anchor:SetHeight(ROW_HEIGHT_LEFT)
 
         if i == 1 then
-            btn:SetPoint("TOPLEFT", leftPanel, "TOPLEFT", 8, -8)
-        elseif (i - 1) % ICONS_PER_ROW == 0 then
-            btn:SetPoint("TOPLEFT", buttons[i - ICONS_PER_ROW], "BOTTOMLEFT", 0, -ICON_SPACING)
+            anchor:SetPoint("TOPLEFT", leftPanel, "TOPLEFT", 8, -8)
         else
-            btn:SetPoint("TOPLEFT", buttons[i - 1], "TOPRIGHT", ICON_SPACING, 0)
+            anchor:SetPoint("TOPLEFT", slots[i - 1].anchor, "BOTTOMLEFT", 0, 0)
         end
+        anchor:SetPoint("RIGHT", leftPanel, "RIGHT", -30, 0)
 
-        btn:SetScript("OnClick", function(self)
-            if selectedButton then
-                selectedButton.selected:Hide()
-            end
-            if selectedButton == self then
-                selectedButton = nil
-            else
-                self.selected:Show()
-                selectedButton = self
-            end
+        local header = CreateFrame("Button", nil, anchor)
+        header:SetAllPoints()
+
+        header.bg = header:CreateTexture(nil, "BACKGROUND")
+        header.bg:SetAllPoints()
+        header.bg:SetTexture("Interface/Tooltips/UI-Tooltip-Background")
+        header.bg:SetVertexColor(0.4, 0.35, 0.2, 0.8)
+
+        header.text = header:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        header.text:SetPoint("LEFT", header, "LEFT", 6, 0)
+        header.text:SetJustifyH("LEFT")
+
+        header.highlight = header:CreateTexture(nil, "HIGHLIGHT")
+        header.highlight:SetAllPoints()
+        header.highlight:SetTexture("Interface/Tooltips/UI-Tooltip-Background")
+        header.highlight:SetVertexColor(0.6, 0.5, 0.3, 0.3)
+
+        header:SetScript("OnClick", function(self)
+            collapsedCategories[self.categoryName] = not collapsedCategories[self.categoryName]
+            UpdateItemGrid()
         end)
 
-        buttons[i] = btn
+        header:Hide()
+
+        local btns = {}
+        for j = 1, ICONS_PER_ROW do
+            local btn = CraftProfit.CreateItemButton(anchor, ICON_SIZE)
+            if j == 1 then
+                btn:SetPoint("TOPLEFT", anchor, "TOPLEFT", 0, 0)
+            else
+                btn:SetPoint("TOPLEFT", btns[j - 1], "TOPRIGHT", ICON_SPACING, 0)
+            end
+
+            btn:SetScript("OnClick", function(self)
+                if selectedItemID == self.itemID then
+                    selectedItemID = nil
+                    currentRecipes = {}
+                else
+                    selectedItemID = self.itemID
+                    currentRecipes = CraftProfit.SortRecipesByCraftability(CraftProfit.FindRecipesByReagent(self.itemID))
+                end
+                UpdateItemGrid()
+                UpdateRecipeList()
+            end)
+
+            btn:Hide()
+            btns[j] = btn
+        end
+
+        slots[i] = {
+            anchor = anchor,
+            header = header,
+            buttons = btns,
+        }
     end
 
-    local function UpdateItemGrid()
-        local itemList = {}
+    local function BuildDisplayRows()
+        local categoryItems = {}
+        local categoryNames = {}
+        local categorySet = {}
+
         for itemID, count in pairs(CraftProfitDB.inventory) do
             local item = CraftProfitDB.items[itemID]
-            table.insert(itemList, {
+            local category = item and item.category or "Autre"
+
+            if not categorySet[category] then
+                categorySet[category] = true
+                table.insert(categoryNames, category)
+                categoryItems[category] = {}
+            end
+
+            table.insert(categoryItems[category], {
                 itemID = itemID,
                 count = count,
                 itemLink = item and item.itemLink or nil,
             })
         end
 
-        local numItems = #itemList
-        local numRows = math.ceil(numItems / ICONS_PER_ROW)
+        table.sort(categoryNames, function(a, b)
+            if a == "Equipement" then return true end
+            if b == "Equipement" then return false end
+            return a < b
+        end)
 
-        FauxScrollFrame_Update(scrollFrame, numRows, VISIBLE_ROWS, ICON_SIZE + ICON_SPACING)
-
-        local rowOffset = FauxScrollFrame_GetOffset(scrollFrame)
-
-        for i = 1, totalSlots do
-            local btn = buttons[i]
-            local visibleRow = math.ceil(i / ICONS_PER_ROW) - 1
-            local col = (i - 1) % ICONS_PER_ROW
-            local dataIndex = (rowOffset + visibleRow) * ICONS_PER_ROW + col + 1
-
-            if dataIndex <= numItems then
-                local item = itemList[dataIndex]
-                btn.icon:SetTexture(GetItemIcon(item.itemID))
-                btn.itemID = item.itemID
-                btn.itemLink = item.itemLink
-
-                if item.count > 1 then
-                    btn.count:SetText(item.count)
-                    btn.count:Show()
-                else
-                    btn.count:Hide()
+        displayRows = {}
+        for _, catName in ipairs(categoryNames) do
+            local items = categoryItems[catName]
+            table.insert(displayRows, { type = "header", name = catName, count = #items })
+            if not collapsedCategories[catName] then
+                for startIdx = 1, #items, ICONS_PER_ROW do
+                    local rowItems = {}
+                    for j = startIdx, math.min(startIdx + ICONS_PER_ROW - 1, #items) do
+                        table.insert(rowItems, items[j])
+                    end
+                    table.insert(displayRows, { type = "items", items = rowItems })
                 end
-                btn:Show()
-            else
-                btn:Hide()
+            end
+        end
+    end
+
+    UpdateItemGrid = function()
+        BuildDisplayRows()
+
+        local numRows = #displayRows
+        FauxScrollFrame_Update(scrollFrame, numRows, VISIBLE_ROWS, ROW_HEIGHT_LEFT)
+        local offset = FauxScrollFrame_GetOffset(scrollFrame)
+
+        for i = 1, VISIBLE_ROWS do
+            local slot = slots[i]
+            local dataIndex = i + offset
+
+            slot.header:Hide()
+            for j = 1, ICONS_PER_ROW do
+                slot.buttons[j]:Hide()
+            end
+
+            if dataIndex <= numRows then
+                local row = displayRows[dataIndex]
+
+                if row.type == "header" then
+                    local arrow = collapsedCategories[row.name] and "> " or "v "
+                    slot.header.text:SetText(arrow .. row.name .. " (" .. row.count .. ")")
+                    slot.header.categoryName = row.name
+                    slot.header:Show()
+                else
+                    for j = 1, ICONS_PER_ROW do
+                        local btn = slot.buttons[j]
+                        local item = row.items[j]
+                        if item then
+                            btn.icon:SetTexture(GetItemIcon(item.itemID))
+                            btn.itemID = item.itemID
+                            btn.itemLink = item.itemLink
+
+                            if item.count > 1 then
+                                btn.count:SetText(item.count)
+                                btn.count:Show()
+                            else
+                                btn.count:Hide()
+                            end
+
+                            if item.itemID == selectedItemID then
+                                btn.selected:Show()
+                            else
+                                btn.selected:Hide()
+                            end
+
+                            btn:Show()
+                        end
+                    end
+                end
             end
         end
     end
 
     scrollFrame:SetScript("OnVerticalScroll", function(self, offset)
-        FauxScrollFrame_OnVerticalScroll(self, offset, ICON_SIZE + ICON_SPACING, UpdateItemGrid)
+        FauxScrollFrame_OnVerticalScroll(self, offset, ROW_HEIGHT_LEFT, UpdateItemGrid)
     end)
 
     -- Panneau droit
@@ -178,9 +280,7 @@ function CraftProfit.CreateMainWindow()
         rows[i] = row
     end
 
-    local currentRecipes = {}
-
-    local function UpdateRecipeList()
+    UpdateRecipeList = function()
         local numItems = #currentRecipes
 
         FauxScrollFrame_Update(rightScrollFrame, numItems, NUM_VISIBLE_ROWS, ROW_HEIGHT + 2)
@@ -271,25 +371,6 @@ function CraftProfit.CreateMainWindow()
     rightScrollFrame:SetScript("OnVerticalScroll", function(self, offset)
         FauxScrollFrame_OnVerticalScroll(self, offset, ROW_HEIGHT + 2, UpdateRecipeList)
     end)
-
-    -- Mettre a jour le OnClick pour alimenter le panneau droit
-    for i = 1, totalSlots do
-        local btn = buttons[i]
-        btn:SetScript("OnClick", function(self)
-            if selectedButton then
-                selectedButton.selected:Hide()
-            end
-            if selectedButton == self then
-                selectedButton = nil
-                currentRecipes = {}
-            else
-                self.selected:Show()
-                selectedButton = self
-                currentRecipes = CraftProfit.SortRecipesByCraftability(CraftProfit.FindRecipesByReagent(self.itemID))
-            end
-            UpdateRecipeList()
-        end)
-    end
 
     f:SetScript("OnShow", function()
         UpdateItemGrid()
