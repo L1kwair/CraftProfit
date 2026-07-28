@@ -14,8 +14,11 @@ CraftProfit_Recipes.lua
 CraftProfit_Prices.lua
 CraftProfit_Format.lua
 CraftProfit_Profit.lua
+CraftProfit_CraftQueue.lua
 CraftProfit_Tooltip.lua
-CraftProfit_UIComponents.lua
-CraftProfit_UI.lua
+UI\CraftProfit_UIComponents.lua
+UI\CraftProfit_UI_Inventory.lua
+UI\CraftProfit_UI_Recipes.lua
+UI\CraftProfit_UI.lua
 CraftProfit_Core.lua
 
