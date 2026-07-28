@@ -277,6 +277,92 @@ function CraftProfit.CreateMainWindow()
             row:SetPoint("RIGHT", rightPanel, "RIGHT", -30, 0)
         end
 
+        row.addBtn = CreateFrame("Button", nil, row, "UIPanelButtonTemplate")
+        row.addBtn:SetSize(26, 22)
+        row.addBtn:SetPoint("TOPRIGHT", row, "TOPRIGHT", -31, -4)
+        row.addBtn:SetText("+")
+
+        row.removeBtn = CreateFrame("Button", nil, row, "UIPanelButtonTemplate")
+        row.removeBtn:SetSize(26, 22)
+        row.removeBtn:SetPoint("LEFT", row.addBtn, "RIGHT", 5, 0)
+        row.removeBtn:SetText("-")
+
+        row.maxBtn = CreateFrame("Button", nil, row, "UIPanelButtonTemplate")
+        row.maxBtn:SetSize(57, 22)
+        row.maxBtn:SetPoint("TOPLEFT", row.addBtn, "BOTTOMLEFT", 0, -2)
+        row.maxBtn:SetText("Max")
+        row.maxBtn:GetFontString():SetFont(GameFontNormal:GetFont(), 9)
+
+        row.qtyInput = CreateFrame("EditBox", nil, row, "InputBoxTemplate")
+        row.qtyInput:SetSize(57, 22)
+        row.qtyInput:SetPoint("TOPLEFT", row.maxBtn, "BOTTOMLEFT", 6, -2)
+        row.qtyInput:SetAutoFocus(false)
+        row.qtyInput:SetNumeric(true)
+        row.qtyInput:SetText("0")
+        row.qtyInput:SetMaxLetters(3)
+
+        row.qtyInput:SetScript("OnEnterPressed", function(self)
+            if not row.spellID then return end
+            local recipe = CraftProfitDB.recipes[row.spellID]
+            local craftable = CraftProfit.CalculateCraftable(recipe)
+            local val = tonumber(self:GetText()) or 0
+            if val > craftable then val = craftable end
+            if val <= 0 then
+                CraftProfitDB.craftQueue[row.spellID] = nil
+                self:SetText("0")
+            else
+                CraftProfitDB.craftQueue[row.spellID] = val
+            end
+            self:ClearFocus()
+        end)
+
+        row.qtyInput:SetScript("OnEditFocusLost", function(self)
+            if not row.spellID then return end
+            local recipe = CraftProfitDB.recipes[row.spellID]
+            local craftable = CraftProfit.CalculateCraftable(recipe)
+            local val = tonumber(self:GetText()) or 0
+            if val > craftable then val = craftable end
+            if val <= 0 then
+                CraftProfitDB.craftQueue[row.spellID] = nil
+                self:SetText("0")
+            else
+                CraftProfitDB.craftQueue[row.spellID] = val
+            end
+        end)
+
+        row.addBtn:SetScript("OnClick", function()
+            if not row.spellID then return end
+            local recipe = CraftProfitDB.recipes[row.spellID]
+            local craftable = CraftProfit.CalculateCraftable(recipe)
+            local current = CraftProfitDB.craftQueue[row.spellID] or 0
+            if current < craftable then
+                CraftProfitDB.craftQueue[row.spellID] = current + 1
+                row.qtyInput:SetText(current + 1)
+            end
+        end)
+
+        row.removeBtn:SetScript("OnClick", function()
+            if not row.spellID then return end
+            local current = CraftProfitDB.craftQueue[row.spellID] or 0
+            if current <= 1 then
+                CraftProfitDB.craftQueue[row.spellID] = nil
+                row.qtyInput:SetText("0")
+            else
+                CraftProfitDB.craftQueue[row.spellID] = current - 1
+                row.qtyInput:SetText(current - 1)
+            end
+        end)
+
+        row.maxBtn:SetScript("OnClick", function()
+            if not row.spellID then return end
+            local recipe = CraftProfitDB.recipes[row.spellID]
+            local craftable = CraftProfit.CalculateCraftable(recipe)
+            if craftable > 0 then
+                CraftProfitDB.craftQueue[row.spellID] = craftable
+                row.qtyInput:SetText(craftable)
+            end
+        end)
+
         rows[i] = row
     end
 
@@ -293,6 +379,7 @@ function CraftProfit.CreateMainWindow()
 
             if index <= numItems then
                 local spellID = currentRecipes[index]
+                row.spellID = spellID
                 local recipe = CraftProfitDB.recipes[spellID]
                 local item = CraftProfitDB.items[recipe.itemID]
                 local name = item and item.name or "?"
@@ -301,6 +388,7 @@ function CraftProfit.CreateMainWindow()
                 row.product.icon:SetTexture(GetItemIcon(recipe.itemID))
                 row.product.itemLink = itemLink
                 row.name:SetText(name)
+                row.qtyInput:SetText(CraftProfitDB.craftQueue[spellID] or 0)
 
                 local result = CraftProfit.CalculateProfit(recipe)
                 if result then
@@ -318,7 +406,7 @@ function CraftProfit.CreateMainWindow()
                 end
 
                 local craftable = CraftProfit.CalculateCraftable(recipe)
-                row.craftable:SetText("x" .. craftable)
+                row.maxBtn:SetText("Max (" .. craftable .. ")")
 
                 if craftable > 0 then
                     row:SetBackdropColor(0.1, 0.1, 0.1, 0.5)

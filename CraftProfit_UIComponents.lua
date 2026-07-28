@@ -67,10 +67,6 @@ function CraftProfit.CreateRecipeRow(parent, iconSize, reagentIconSize, maxReage
     row.profit:SetPoint("LEFT", row.product, "RIGHT", 8, -8)
     row.profit:SetJustifyH("LEFT")
 
-    row.craftable = row:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-    row.craftable:SetPoint("RIGHT", row, "RIGHT", -4, -8)
-    row.craftable:SetJustifyH("RIGHT")
-
     row.reagents = {}
     for j = 1, maxReagents do
         local r = CraftProfit.CreateItemButton(row, reagentIconSize)

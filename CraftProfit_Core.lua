@@ -21,6 +21,7 @@ frame:SetScript("OnEvent", function(self, event, ...)
                 professions = {},
                 inventory = {},
                 bank = {},
+                craftQueue = {},
             }
             CraftProfit.Debug("Premiere utilisation, base creee")
         else
@@ -30,6 +31,7 @@ frame:SetScript("OnEvent", function(self, event, ...)
             CraftProfitDB.professions = CraftProfitDB.professions or {}
             CraftProfitDB.inventory = CraftProfitDB.inventory or {}
             CraftProfitDB.bank = CraftProfitDB.bank or {}
+            CraftProfitDB.craftQueue = CraftProfitDB.craftQueue or {}
             CraftProfit.Debug("Base existante chargee")
         end
 
