@@ -77,9 +77,16 @@ function CraftProfit.CreateRecipeRow(parent, iconSize, reagentIconSize, maxReage
             r:SetPoint("LEFT", row.reagents[j - 1], "RIGHT", 14, 0)
         end
 
+        -- Free stock / amount needed. Recolored on each refresh.
         r.qty = r:CreateFontString(nil, "OVERLAY", "GameFontHighlightExtraSmall")
         r.qty:SetPoint("TOP", r, "BOTTOM", 0, -1)
         r.qty:SetJustifyH("CENTER")
+
+        -- Total in bags, queue ignored. Always grey.
+        r.total = r:CreateFontString(nil, "OVERLAY", "GameFontHighlightExtraSmall")
+        r.total:SetPoint("TOP", r.qty, "BOTTOM", 0, -1)
+        r.total:SetJustifyH("CENTER")
+        r.total:SetTextColor(0.5, 0.5, 0.5)
 
         r:Hide()
         row.reagents[j] = r

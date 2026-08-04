@@ -75,13 +75,40 @@ function CraftProfit.FindRecipesByReagent(itemID)
     return results
 end
 
--- Combien de fois cette recette est craftable avec le contenu des sacs.
--- Vient de CraftProfit_Profit.lua : elle ne calcule aucun prix, c'est une requete
--- sur l'inventaire, et SortRecipesByCraftability juste en dessous l'utilise.
-function CraftProfit.CalculateCraftable(recipe)
+-- Bags minus what the craft queue reserves. [itemID] = count.
+-- Can be negative: those reagents have to be bought or farmed.
+-- Rebuilt once per refresh, never cached.
+function CraftProfit.GetFreeStock()
+    local free = {}
+
+    for itemID, count in pairs(CraftProfitDB.inventory) do
+        free[itemID] = count
+    end
+
+    for spellID, qty in pairs(CraftProfitDB.craftQueue) do
+        local recipe = CraftProfitDB.recipes[spellID]
+        if recipe then
+            for _, reagent in ipairs(recipe.reagents) do
+                local reserved = reagent.count * qty
+                free[reagent.itemID] = (free[reagent.itemID] or 0) - reserved
+            end
+        end
+    end
+
+    return free
+end
+
+-- How many times this recipe can be crafted out of a given stock.
+-- stock defaults to the raw bags (queue ignored); pass GetFreeStock() otherwise.
+-- Not clamped to zero on purpose: GetMaxQueueable needs the negative value.
+function CraftProfit.CalculateCraftable(recipe, stock)
+    if not stock then
+        stock = CraftProfitDB.inventory
+    end
+
     local minCraftable = math.huge
     for _, reagent in ipairs(recipe.reagents) do
-        local owned = CraftProfitDB.inventory[reagent.itemID] or 0
+        local owned = stock[reagent.itemID] or 0
         local possible = math.floor(owned / reagent.count)
         minCraftable = math.min(minCraftable, possible)
     end

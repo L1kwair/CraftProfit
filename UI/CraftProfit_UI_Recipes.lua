@@ -11,7 +11,7 @@ local PANEL_BACKDROP = {
     insets = { left = 3, right = 3, top = 3, bottom = 3 },
 }
 
-local ROW_HEIGHT = 80
+local ROW_HEIGHT = 86
 local ROW_SPACING = 2
 local VISIBLE_ROWS = 5
 local RECIPE_ICON_SIZE = 32
@@ -63,41 +63,44 @@ function CraftProfit.CreateRecipePanel(parent)
         row.maxBtn:GetFontString():SetFont(GameFontNormal:GetFont(), 9)
 
         row.qtyInput = CreateFrame("EditBox", nil, row, "InputBoxTemplate")
-        row.qtyInput:SetSize(57, 22)
-        row.qtyInput:SetPoint("TOPLEFT", row.maxBtn, "BOTTOMLEFT", 6, -2)
+        row.qtyInput:SetSize(52, 22)
+        row.qtyInput:SetPoint("TOPLEFT", row.maxBtn, "BOTTOMLEFT", 5, -2)
         row.qtyInput:SetAutoFocus(false)
         row.qtyInput:SetNumeric(true)
         row.qtyInput:SetText("0")
         row.qtyInput:SetMaxLetters(3)
 
-        -- CraftQueue clamps the quantity and returns what it kept,
-        -- so there is nothing to recompute here, we just display the answer.
         row.qtyInput:SetScript("OnEnterPressed", function(self)
             if row.spellID then
-                self:SetText(CraftProfit.SetQueue(row.spellID, self:GetText()))
+                CraftProfit.SetQueue(row.spellID, self:GetText())
+                UpdateRecipeList()
             end
             self:ClearFocus()
         end)
 
         row.qtyInput:SetScript("OnEditFocusLost", function(self)
             if row.spellID then
-                self:SetText(CraftProfit.SetQueue(row.spellID, self:GetText()))
+                CraftProfit.SetQueue(row.spellID, self:GetText())
+                UpdateRecipeList()
             end
         end)
 
         row.addBtn:SetScript("OnClick", function()
             if not row.spellID then return end
-            row.qtyInput:SetText(CraftProfit.AddQueue(row.spellID, 1))
+            CraftProfit.AddQueue(row.spellID, 1)
+            UpdateRecipeList()
         end)
 
         row.removeBtn:SetScript("OnClick", function()
             if not row.spellID then return end
-            row.qtyInput:SetText(CraftProfit.AddQueue(row.spellID, -1))
+            CraftProfit.AddQueue(row.spellID, -1)
+            UpdateRecipeList()
         end)
 
         row.maxBtn:SetScript("OnClick", function()
             if not row.spellID then return end
-            row.qtyInput:SetText(CraftProfit.MaxQueue(row.spellID))
+            CraftProfit.MaxQueue(row.spellID)
+            UpdateRecipeList()
         end)
 
         rows[i] = row
@@ -105,6 +108,7 @@ function CraftProfit.CreateRecipePanel(parent)
 
     UpdateRecipeList = function()
         local numItems = #currentRecipes
+        local free = CraftProfit.GetFreeStock()
 
         FauxScrollFrame_Update(scrollFrame, numItems, VISIBLE_ROWS, ROW_HEIGHT + ROW_SPACING)
 
@@ -142,7 +146,7 @@ function CraftProfit.CreateRecipePanel(parent)
                     row.profit:SetTextColor(0.5, 0.5, 0.5)
                 end
 
-                local craftable = CraftProfit.CalculateCraftable(recipe)
+                local craftable = CraftProfit.GetMaxQueueable(spellID, free)
                 row.maxBtn:SetText("Max (" .. craftable .. ")")
 
                 if craftable > 0 then
@@ -166,9 +170,12 @@ function CraftProfit.CreateRecipePanel(parent)
                         r.icon:SetTexture(GetItemIcon(reagent.itemID))
                         local reagentItem = CraftProfitDB.items[reagent.itemID]
                         r.itemLink = reagentItem and reagentItem.itemLink or nil
-                        local owned = CraftProfitDB.inventory[reagent.itemID] or 0
-                        r.qty:SetText(owned .. "/" .. reagent.count)
-                        if owned >= reagent.count then
+                        local available = free[reagent.itemID] or 0
+                        local total = CraftProfitDB.inventory[reagent.itemID] or 0
+                        r.qty:SetText(available .. "/" .. reagent.count)
+                        r.total:SetText("(" .. total .. ")")
+
+                        if available >= reagent.count then
                             r.qty:SetTextColor(0, 1, 0)
                             r.icon:SetDesaturated(false)
                             r.icon:SetAlpha(1)
