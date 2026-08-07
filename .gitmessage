@@ -1,0 +1,22 @@
+
+# ---------------------------------------------------------------
+# <Verb> <what it does>
+# 50 chars max 
+#
+# Why this change, not how it works.
+# 72 chars max 
+# 
+#
+# The subject must complete: "If applied, this commit will ___"
+#
+#   Add       new capability or file
+#   Fix       broken behaviour
+#   Refactor  structure changes, behaviour does not
+#   Remove    deleted code
+#   Rename    renaming only
+#   Update    adjustment to something existing
+#   Document  comments, README
+#
+#   One commit = one reason to change.
+#   "and" in the subject means it should have been two commits.
+#   Body only when the "why" is not obvious.
