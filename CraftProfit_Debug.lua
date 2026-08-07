@@ -1,6 +1,5 @@
 CraftProfit = CraftProfit or {}
 
--- Fonction recursive qui affiche le contenu d'une table, meme imbriquee
 local function DumpTable(t, indent)
     indent = indent or ""
     
@@ -15,7 +14,6 @@ local function DumpTable(t, indent)
     end
 end
 
--- Fonction publique qu'on appellera depuis le reste de l'addon
 function CraftProfit.Debug(value)
     if type(value) == "table" then
         print("=== Debug Table ===")

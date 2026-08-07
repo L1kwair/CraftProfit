@@ -1,6 +1,4 @@
 -- Main window: shell, layout and wiring between the two panels.
--- The panels themselves live in CraftProfit_UI_Inventory.lua and
--- CraftProfit_UI_Recipes.lua.
 
 local WINDOW_BACKDROP = {
     bgFile = "Interface/Tooltips/UI-Tooltip-Background",
@@ -53,17 +51,12 @@ function CraftProfit.CreateMainWindow()
     recipePanel:SetPoint("TOPLEFT", f, "TOP", 5, -35)
     recipePanel:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -10, 10)
 
-    -- The only coupling between the two panels: a click on an item feeds
-    -- the recipe list. The inventory panel does not know the recipe panel exists.
     local inventoryPanel = CraftProfit.CreateInventoryPanel(f, function(itemID)
         recipePanel:SetRecipes(CraftProfit.GetRecipesForReagent(itemID))
     end)
     inventoryPanel:SetPoint("TOPLEFT", f, "TOPLEFT", 10, -35)
     inventoryPanel:SetPoint("BOTTOMRIGHT", f, "BOTTOM", -5, 10)
 
-    -- Nothing is refreshed while the window is hidden, so both panels are
-    -- redrawn on reopen, otherwise the recipe list would still show the
-    -- numbers it had before the window was closed.
     f:SetScript("OnShow", function()
         inventoryPanel:Refresh()
         recipePanel:Refresh()

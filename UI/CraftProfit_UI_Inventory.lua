@@ -1,6 +1,4 @@
 -- Left panel: bag inventory as a grid of icons, grouped by item category.
--- This module FILLS the panel, it does not PLACE it: the SetPoint calls stay
--- in CraftProfit_UI.lua, the only file that knows the window layout.
 
 local PANEL_BACKDROP = {
     bgFile = "Interface/Tooltips/UI-Tooltip-Background",
@@ -26,13 +24,10 @@ function CraftProfit.CreateInventoryPanel(parent, onSelect)
     scrollFrame:SetPoint("TOPLEFT", panel, "TOPLEFT", 0, -8)
     scrollFrame:SetPoint("BOTTOMRIGHT", panel, "BOTTOMRIGHT", -30, 8)
 
-    -- Panel state: private to this closure, nothing outside can touch it.
     local selectedItemID = nil
     local collapsedCategories = {}
     local displayRows = {}
 
-    -- Forward declaration: the click handlers below call UpdateItemGrid,
-    -- which can only be written once the widgets exist.
     local UpdateItemGrid
 
     local slots = {}
@@ -80,8 +75,6 @@ function CraftProfit.CreateInventoryPanel(parent, onSelect)
                 btn:SetPoint("TOPLEFT", btns[j - 1], "TOPRIGHT", ICON_SPACING, 0)
             end
 
-            -- The panel only reports which item is selected.
-            -- It does not know what the caller does with it.
             btn:SetScript("OnClick", function(self)
                 if selectedItemID == self.itemID then
                     selectedItemID = nil
@@ -104,9 +97,6 @@ function CraftProfit.CreateInventoryPanel(parent, onSelect)
     end
 
     local function BuildDisplayRows()
-        -- Data arrives already grouped and sorted; all that is left here is UI work,
-        -- that is packing items into rows of ICONS_PER_ROW and skipping collapsed
-        -- categories.
         local categoryNames, categoryItems = CraftProfit.GetInventoryByCategory()
 
         displayRows = {}

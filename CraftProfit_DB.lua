@@ -26,11 +26,9 @@ function CraftProfit.RegisterItem(itemID)
     }
 end
 
--- Regroupe l'inventaire des sacs par categorie d'objet.
--- Retourne deux valeurs :
---   categoryNames : liste triee des categories ("Equipement" en tete, puis alphabetique)
---   categoryItems : table [nomCategorie] = { { itemID, count, itemLink }, ... }
--- Ne lit que les sacs pour l'instant ; la banque viendra plus tard.
+-- Groups the bag inventory by item category. Returns two values:
+--   categoryNames : sorted category list ("Equipement" first, then alphabetical)
+--   categoryItems : [categoryName] = { { itemID, count, itemLink }, ... }
 function CraftProfit.GetInventoryByCategory()
     local categoryItems = {}
     local categoryNames = {}
@@ -75,9 +73,8 @@ function CraftProfit.FindRecipesByReagent(itemID)
     return results
 end
 
--- Bags minus what the craft queue reserves. [itemID] = count.
--- Can be negative: those reagents have to be bought or farmed.
--- Rebuilt once per refresh, never cached.
+-- Bags minus what the craft queue reserves, keyed by itemID.
+-- A count can be negative: those reagents have to be bought or farmed.
 function CraftProfit.GetFreeStock()
     local free = {}
 
@@ -100,7 +97,7 @@ end
 
 -- How many times this recipe can be crafted out of a given stock.
 -- stock defaults to the raw bags (queue ignored); pass GetFreeStock() otherwise.
--- Not clamped to zero on purpose: GetMaxQueueable needs the negative value.
+-- Returns a count that can be negative.
 function CraftProfit.CalculateCraftable(recipe, stock)
     if not stock then
         stock = CraftProfitDB.inventory
@@ -115,6 +112,8 @@ function CraftProfit.CalculateCraftable(recipe, stock)
     return minCraftable
 end
 
+-- Sorts a list of spellIDs in place: craftable recipes first, then by decreasing
+-- profit. Returns that same table, not a copy.
 function CraftProfit.SortRecipesByCraftability(spellIDs)
     table.sort(spellIDs, function(a, b)
         local recipeA = CraftProfitDB.recipes[a]
@@ -137,10 +136,8 @@ function CraftProfit.SortRecipesByCraftability(spellIDs)
     return spellIDs
 end
 
--- Recipes consuming this item, already sorted for display
--- (craftable ones first, then by decreasing profit).
--- A nil itemID (nothing selected) returns an empty list, not nil,
--- so the caller can always ipairs over it without a guard.
+-- Recipes consuming this item, already sorted for display:
+-- craftable first, then by decreasing profit.
 function CraftProfit.GetRecipesForReagent(itemID)
     if not itemID then return {} end
 

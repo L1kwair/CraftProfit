@@ -1,8 +1,5 @@
 -- Right panel: list of recipes, with profit, craftable count, reagents and
 -- the craft queue controls.
--- This module FILLS the panel, it does not PLACE it: the SetPoint calls stay
--- in CraftProfit_UI.lua, the only file that knows the window layout.
--- The panel knows nothing about the item grid, it only receives a list of spellIDs.
 
 local PANEL_BACKDROP = {
     bgFile = "Interface/Tooltips/UI-Tooltip-Background",
@@ -27,10 +24,8 @@ function CraftProfit.CreateRecipePanel(parent)
     scrollFrame:SetPoint("TOPLEFT", panel, "TOPLEFT", 0, -8)
     scrollFrame:SetPoint("BOTTOMRIGHT", panel, "BOTTOMRIGHT", -30, 8)
 
-    -- Recipes currently displayed, set by SetRecipes.
     local currentRecipes = {}
 
-    -- Forward declaration: the queue buttons below call UpdateRecipeList.
     local UpdateRecipeList
 
     local rows = {}
@@ -210,7 +205,6 @@ function CraftProfit.CreateRecipePanel(parent)
         UpdateRecipeList()
     end
 
-    -- Redraw the current list, for instance after the bags changed.
     function panel:Refresh()
         UpdateRecipeList()
     end
